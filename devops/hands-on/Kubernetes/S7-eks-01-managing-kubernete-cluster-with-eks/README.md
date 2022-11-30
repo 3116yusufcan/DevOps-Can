@@ -33,10 +33,10 @@ At the end of this hands-on training, students will be able to;
 sudo yum update -y
 ```
 
-- Download the Amazon EKS vended kubectl binary.
+- Download the Amazon EKS vended kubectl binary that is compatible with kubernetes cluster version.
 
 ```bash
-curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.6/2022-03-09/bin/linux/amd64/kubectl
+curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.23.13/2022-10-31/bin/linux/amd64/kubectl
 ```
 
 - Apply execute permissions to the binary.
@@ -100,7 +100,7 @@ aws eks list-clusters
 
     - Give general descriptions about the page and the steps of creating the cluster.
 
-    - Fill the ```Name``` and ```Kubernetes version``` fields. (Ex: MyCluster, 1.21)
+    - Fill the ```Name``` and ```Kubernetes version``` fields. (Ex: MyCluster, 1.23)
 
         <i>Mention the durations for minor version support and the approximate release frequency.</i>
 
@@ -256,7 +256,8 @@ kubectl get nodes --watch
 
 1. Explain what ```Cluster Autoscaler``` is and why we need it.
 
-2. Create a policy with following content. You can name it as ClusterAutoscalerPolicy. 
+2. Create a policy with following content. You can name it as ClusterAutoscalerPolicy.
+
 ```json
 {
     "Version": "2012-10-17",
@@ -281,34 +282,42 @@ kubectl get nodes --watch
 3. Attach this policy to the IAM Worker Node Role which is already in use.
 
 4. Deploy the ```Cluster Autoscaler``` with the following command.
+
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml
 ```
 
 5. Add an annotation to the deployment with the following command.
+
 ```bash
 kubectl -n kube-system annotate deployment.apps/cluster-autoscaler cluster-autoscaler.kubernetes.io/safe-to-evict="false"
 ```
 
 6. Edit the Cluster Autoscaler deployment with the following command.
+
 ```bash
 kubectl -n kube-system edit deployment.apps/cluster-autoscaler
 ```
+
 This command will open the yaml file for your editting. Replace <CLUSTER NAME> value with your own cluster name, and add the following command option ```--skip-nodes-with-system-pods=false``` to the command section under ```containers``` under ```spec```. Save and exit the file by pressing ```:wq```. The changes will be applied.
 
-7. Find an appropriate version of your cluster autoscaler in the [link](https://github.com/kubernetes/autoscaler/releases). The version number should start with version number of the cluster Kubernetes version. For example, if you have selected the Kubernetes version 1.19, you should find something like ```1.19.6```.
+7. Find an appropriate version of your cluster autoscaler in the [link](https://github.com/kubernetes/autoscaler/releases). The version number should start with version number of the cluster Kubernetes version. For example, if you have selected the Kubernetes version 1.23, you should find something like ```1.23.0```.
 
 8. Then, in the following command, set the Cluster Autoscaler image tag as that version you have found in the previous step.
-```bash
-kubectl -n kube-system set image deployment.apps/cluster-autoscaler cluster-autoscaler=us.gcr.io/k8s-artifacts-prod/autoscaling/cluster-autoscaler:<YOUR-VERSION-HERE>
-```
-You can also replace ```us``` with ```asia``` or ```eu```.
 
+```bash
+kubectl -n kube-system set image deployment.apps/cluster-autoscaler cluster-autoscaler=k8s.gcr.io/autoscaling/cluster-autoscaler:<YOUR-VERSION-HERE>
+```
+
+For example:
+
+```bash
+kubectl -n kube-system set image deployment.apps/cluster-autoscaler cluster-autoscaler=k8s.gcr.io/autoscaling/cluster-autoscaler:v1.23.0
+```
 
 ## Part 5 - Deploying a Sample Application
 
-
-1. Create a .yml file in your local environment with the following content.
+1. Create a `myapp.yml` file in your local environment with the following content.
 
 ```yaml
 kind: Namespace
@@ -360,11 +369,13 @@ spec:
 ```
 
 2. Deploy the application with following command.
+
 ```bash
-kubectl apply -f <your-sample-app>.yaml
+kubectl apply -f myapp.yaml
 ```
 
 3. Run the command below.
+
 ```bash
 kubectl -n my-namespace get svc
 ```
@@ -374,6 +385,7 @@ kubectl -n my-namespace get svc
 ```bash
 kubectl describe service container-info-svc -n my-namespace
 ```
+
 Show the warning: "Error creating load balancer (will retry): failed to ensure load balancer for service default/guestbook: could not find any suitable subnets for creating the ELB"
 
 5. Go to this [link](https://aws.amazon.com/tr/premiumsupport/knowledge-center/eks-vpc-subnet-discovery/). Explain that it is necessary to tag selected subnets as follows:
@@ -386,7 +398,6 @@ Show the warning: "Error creating load balancer (will retry): failed to ensure l
 - Key: kubernetes.io/cluster/<cluster-name>
 - Value: shared
 
-
 7. Describe service object and analyze it.
 
 ```bash
@@ -395,15 +406,18 @@ kubectl describe service container-info-svc -n my-namespace
 
 8. Get the ```External IP``` value from the previous command's output and visit that ip.
 
-9. For scale up edit deployment. Change "replicas=30" in .yaml file. Save the file.
+9. For scale up edit deployment. Change "replicas=30" in `myapp.yaml` file. Save the file.
 
 ```bash
 kubectl edit deploy container-info-deploy -n my-namespace
 ```
+
 10. Watch the pods while creating. Show that some pods are pending state.
+
 ```bash
 kubectl get po -n my-namespace -w
 ```
+
 11. Describe one of the pending pods. Show that there is no resource to run pods. So cluster-autoscaler scales out and create one more node.
 
 ```bash
