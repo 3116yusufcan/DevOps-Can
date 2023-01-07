@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Description: |
-  This Cloudformation Template creates a Kubernetes Cluster on Ubuntu 20.04 of EC2 Instances.
+  This Cloudformation Template creates a Kubernetes Cluster on Ubuntu 22.04 of EC2 Instances.
   Kubernetes cluster comprises of one master node and one worker node.
   Once the Master node is up and running, Worker node automatically joins the Cluster.
   Managers security group allows all protocols from all ports within itself and from the Workers.
@@ -61,6 +61,10 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 30000
+          ToPort: 32767
+          CidrIp: 0.0.0.0/0        
   WorkersSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -70,6 +74,10 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 30000
+          ToPort: 32767
+          CidrIp: 0.0.0.0/0  
   ManagersSGIngress1:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
@@ -98,7 +106,7 @@ Resources:
   KubeMaster1:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0dba2cb6798deb6d8
+      ImageId: ami-04505e74c0741db8d
       InstanceType: t3a.medium
       KeyName: !Ref KeyPairName
       IamInstanceProfile: !Ref EC2ConnectProfile
@@ -107,7 +115,7 @@ Resources:
       Tags:                
         -                        
           Key: Name
-          Value: !Sub Kube Master 1st on Ubuntu 20.04 of ${AWS::StackName}
+          Value: !Sub Kube Master 1st on Ubuntu 22.04 of ${AWS::StackName}
       UserData: 
         Fn::Base64: 
           !Sub |
@@ -141,7 +149,7 @@ Resources:
             curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
             apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
             apt update
-            apt install -y kubelet kubeadm kubectl
+            apt install -y kubelet=1.25.0-00 kubeadm=1.25.0-00 kubectl=1.25.0-00
             systemctl start kubelet
             systemctl enable kubelet
             kubeadm init --pod-network-cidr=172.16.0.0/16 --ignore-preflight-errors=All
@@ -155,7 +163,7 @@ Resources:
     DependsOn:
       - KubeMaster1
     Properties:
-      ImageId: ami-0dba2cb6798deb6d8
+      ImageId: ami-04505e74c0741db8d
       InstanceType: t3a.medium
       KeyName: !Ref KeyPairName
       IamInstanceProfile: !Ref EC2ConnectProfile
@@ -164,7 +172,7 @@ Resources:
       Tags:                
         -                        
           Key: Name
-          Value: !Sub Kube Worker 1st on Ubuntu 20.04 of ${AWS::StackName}
+          Value: !Sub Kube Worker 1st on Ubuntu 22.04 of ${AWS::StackName}
       UserData: 
         Fn::Base64: 
           !Sub |
@@ -197,7 +205,7 @@ Resources:
             curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
             apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
             apt update
-            apt install -y kubelet kubeadm kubectl
+            apt install -y kubelet=1.25.0-00 kubeadm=1.25.0-00 kubectl=1.25.0-00
             systemctl start kubelet
             systemctl enable kubelet
             apt install -y python3-pip
