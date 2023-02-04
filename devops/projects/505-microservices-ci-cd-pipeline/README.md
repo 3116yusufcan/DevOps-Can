@@ -3825,7 +3825,7 @@ docker volume create --name nexus-data
 docker run -d -p 8081:8081 --name nexus -v nexus-data:/nexus-data sonatype/nexus3
 ```
 
-- Open your browser to load the repository manager: `http://<AWS public dns>:8081` and click `Sing in` upper right of the page. A box will pop up.
+- Open your browser to load the repository manager: `http://<AWS public dns>:8081` and click `Sign in` upper right of the page. A box will pop up.
 Write `admin` for Username and paste the string which you copied from admin.password file for the password.
 
 - Use the content of the `initialpasswd.txt` file that is under the same directory of terrafom file. ("provisioner" block of the tf file copies the content of the  `admin.password` file in the container to the `initialpasswd.txt` in the local host.)
