@@ -369,11 +369,9 @@ helm uninstall notes-demo
 - Install the chartmuseum.
 
 ```bash
-curl -LO https://s3.amazonaws.com/chartmuseum/release/latest/bin/linux/amd64/chartmuseum
-chmod +x ./chartmuseum
-sudo mv ./chartmuseum /usr/local/bin
-chartmuseum --version
+curl https://raw.githubusercontent.com/helm/chartmuseum/main/scripts/get-chartmuseum | bash
 ```
+
 
 - Configure the chartmuseum repo for use with local filesystem storage.
 
